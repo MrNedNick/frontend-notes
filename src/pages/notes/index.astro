@@ -1,0 +1,45 @@
+---
+import Base from '../../layouts/base.astro'
+import NoteCard from '../../components/note-card.astro'
+import Search from '../../components/search.astro'
+import { publishedNotes, notesByTag } from '../../lib/notes'
+import { tagSlug } from '../../lib/format'
+
+const notes = await publishedNotes()
+const tags = [...(await notesByTag()).entries()].sort((a, b) => b[1].length - a[1].length)
+const labelFor = (slug: string) =>
+  notes.flatMap((note) => note.data.tags).find((tag) => tagSlug(tag) === slug) ?? slug
+---
+
+<Base
+  title="Notes — Frontend Notes"
+  description="Every note: service workers, layout shift, keyboard grids, design tokens and how the numbers on the stacks page were measured."
+  section="notes"
+>
+  <h1 class="text-2xl font-semibold tracking-tight">Notes</h1>
+  <p class="mt-2 max-w-2xl text-sm text-ink-soft">
+    {notes.length} of them, newest first. Each one came out of a specific bug in a specific
+    project, and says what it cost and what fixed it.
+  </p>
+
+  <Search />
+
+  <ul class="mt-6 flex flex-wrap gap-2" aria-label="All tags">
+    {
+      tags.map(([slug, tagged]) => (
+        <li>
+          <a
+            href={`/tags/${slug}`}
+            class="rounded-full border border-line px-3 py-1 text-xs text-ink-soft hover:border-accent hover:text-accent"
+          >
+            {labelFor(slug)} <span class="text-ink-soft/70">{tagged.length}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+
+  <div class="mt-6 grid gap-3" data-notes-list>
+    {notes.map((note) => <NoteCard note={note} />)}
+  </div>
+</Base>

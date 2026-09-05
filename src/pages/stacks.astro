@@ -1,0 +1,125 @@
+---
+import Base from '../layouts/base.astro'
+import { MEASURED_ON, MEASURED_WITH, STACKS } from '../data/stacks'
+import { formatBytes } from '../lib/format'
+
+const measured = STACKS.filter((stack) => stack.jsBytes !== null)
+const heaviest = Math.max(...measured.map((stack) => stack.jsBytes!))
+const bar = (bytes: number | null) => (bytes === null ? 0 : Math.round((bytes / heaviest) * 100))
+---
+
+<Base
+  title="Five stacks compared — Frontend Notes"
+  description="Cold build time and JavaScript actually downloaded on first load for Astro, SvelteKit, Angular, React with TanStack and Vue — measured, not quoted."
+  section="stacks"
+>
+  <h1 class="text-2xl font-semibold tracking-tight">Five stacks, measured the same way</h1>
+  <p class="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
+    Each of these is a real application I built, not a benchmark. The numbers come from a cold
+    production build and from the browser's own accounting of what it downloaded — so they are
+    comparable to each other, and to nothing else on the internet.{' '}
+    <a class="text-accent hover:underline" href="/notes/measuring-instead-of-guessing">
+      How they were measured →
+    </a>
+  </p>
+
+  <p class="mt-3 text-xs text-ink-soft">
+    Measured {MEASURED_ON} · {MEASURED_WITH}
+  </p>
+
+  <div class="mt-8 overflow-x-auto">
+    <table class="w-full min-w-[46rem] border-collapse text-sm">
+      <caption class="sr-only">
+        Cold build time and first-load JavaScript for each project
+      </caption>
+      <thead>
+        <tr class="border-b border-line text-left text-xs uppercase tracking-wide text-ink-soft">
+          <th scope="col" class="py-2 pr-4 font-medium">Project</th>
+          <th scope="col" class="py-2 pr-4 font-medium">Stack</th>
+          <th scope="col" class="py-2 pr-4 text-right font-medium">Cold build</th>
+          <th scope="col" class="py-2 pr-4 text-right font-medium">JS on first load</th>
+          <th scope="col" class="py-2 font-medium">Relative</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          STACKS.map((stack) => (
+            <tr class="border-b border-line/70 align-top">
+              <th scope="row" class="py-3 pr-4 text-left font-medium">
+                <a class="hover:text-accent" href={stack.repo} rel="noreferrer noopener" target="_blank">
+                  {stack.name}
+                </a>
+                <span class="mt-0.5 block text-xs font-normal text-ink-soft">{stack.what}</span>
+              </th>
+              <td class="py-3 pr-4 text-ink-soft">{stack.stack}</td>
+              <td class="py-3 pr-4 text-right tabular-nums">
+                {stack.buildSeconds === null ? '—' : `${stack.buildSeconds.toFixed(1)} s`}
+              </td>
+              <td class="py-3 pr-4 text-right tabular-nums">
+                {stack.jsBytes === null ? '—' : formatBytes(stack.jsBytes)}
+                {stack.mockApiBytes && (
+                  <span class="mt-0.5 block text-xs font-normal text-ink-soft">
+                    {formatBytes(stack.mockApiBytes)} of it the mock API
+                  </span>
+                )}
+                {stack.jsRequests !== null && (
+                  <span class="mt-0.5 block text-xs font-normal text-ink-soft">
+                    {stack.jsRequests} {stack.jsRequests === 1 ? 'request' : 'requests'}
+                  </span>
+                )}
+              </td>
+              <td class="py-3">
+                <div class="h-2 w-full rounded-full bg-line" role="presentation">
+                  <div class="h-2 rounded-full bg-accent" style={`width: ${bar(stack.jsBytes)}%`} />
+                </div>
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <p class="mt-3 text-xs text-ink-soft">
+    JavaScript is gzipped, as a host would serve it, and counted by the browser six seconds after
+    navigation so lazy chunks are included. Two of these applications ship an in-browser mock API
+    because they have no backend; that part is broken out so it is not mistaken for framework
+    weight.
+  </p>
+
+  <h2 class="mt-12 text-lg font-semibold">What each one was actually like</h2>
+  <div class="mt-4 grid gap-4">
+    {
+      STACKS.map((stack) => (
+        <section class="rounded-xl border border-line bg-surface p-5">
+          <div class="flex flex-wrap items-baseline justify-between gap-2">
+            <h3 class="text-base font-semibold">{stack.name}</h3>
+            <p class="text-xs text-ink-soft">{stack.stack}</p>
+          </div>
+          {stack.caveat && <p class="mt-2 text-xs text-accent">{stack.caveat}</p>}
+          <dl class="mt-3 grid gap-3 sm:grid-cols-2">
+            <div>
+              <dt class="text-xs font-medium uppercase tracking-wide text-ink-soft">Worked well</dt>
+              <dd class="mt-1 text-sm leading-relaxed">{stack.worked}</dd>
+            </div>
+            <div>
+              <dt class="text-xs font-medium uppercase tracking-wide text-ink-soft">Got in the way</dt>
+              <dd class="mt-1 text-sm leading-relaxed">{stack.friction}</dd>
+            </div>
+          </dl>
+          <p class="mt-3 text-xs text-ink-soft">
+            <a class="text-accent hover:underline" href={stack.repo} rel="noreferrer noopener" target="_blank">
+              Repository
+            </a>
+            {' · '}
+            {stack.demo ? (
+              <a class="text-accent hover:underline" href={stack.demo}>Live demo</a>
+            ) : (
+              <span>No live demo — the repository is still private</span>
+            )}
+          </p>
+        </section>
+      ))
+    }
+  </div>
+</Base>

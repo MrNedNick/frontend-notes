@@ -1,0 +1,71 @@
+---
+title: A hundred and twenty tab stops is not keyboard accessible
+description: Every free slot in a week grid was a button, and every button was in the tab order. The fix is the pattern grids have used since before I was writing them.
+date: 2026-09-01
+tags: ['accessibility', 'keyboard', 'patterns']
+project: booking-desk
+---
+
+The booking grid renders a button for every free half-hour: five days, twelve
+hours, thirty-minute slots. That is up to 120 buttons, and a keyboard user
+tabbing towards the footer had to pass through all of them.
+
+Every audit was green. Focus was visible, labels were correct, the contrast was
+fine. Nothing catches this except counting:
+
+```js
+[...document.querySelectorAll('a[href],button:not([disabled]),input,[tabindex]')]
+  .filter((el) => el.tabIndex >= 0).length
+// 130
+```
+
+## Roving tabindex
+
+The pattern for a grid of equivalent controls is that the *grid* is one tab
+stop, and the arrow keys move between the things inside it. Exactly one child
+carries `tabindex="0"`; the rest carry `-1` and are reachable only by the arrow
+keys — which is also how a native `<select>`, a radio group and a menu behave.
+
+<div class="not-prose my-6 rounded-xl border border-line bg-surface p-4 text-sm">
+  <p class="font-medium">The whole mechanism</p>
+  <ol class="mt-2 list-decimal space-y-1 pl-5 text-ink-soft">
+    <li>One piece of state: which cell is "current".</li>
+    <li><code>tabIndex</code> on each cell is <code>current ? 0 : -1</code>.</li>
+    <li>A keydown handler maps arrows, Home and End to a new current cell.</li>
+    <li>After the state changes, move DOM focus to that cell.</li>
+  </ol>
+</div>
+
+In an Angular template that is two bindings and a handler:
+
+```html
+<button
+  type="button"
+  [tabIndex]="isActiveSlot(column.date, slot.start) ? 0 : -1"
+  (keydown)="onSlotKeydown($event, column.date, slot.start)"
+  (click)="book(column.date, slot.start)"
+></button>
+```
+
+Up and down move within a day, left and right move between days at the same
+time of day, Home and End jump to the ends of a column. The tab-stop count on
+the page went from 130 to 16.
+
+## The part everyone forgets
+
+Focus has to move *after* the attribute is updated, which in a signals-based
+framework means after change detection has run:
+
+```ts
+private focusSlot(key: string): void {
+  // The tabindex has to be on the element before it can take focus.
+  queueMicrotask(() => {
+    const button = this.slotButtons().find((ref) => ref.nativeElement.dataset['slot'] === key)
+    button?.nativeElement.focus()
+  })
+}
+```
+
+And the affordance has to be discoverable: an interaction nobody can see is not
+a feature. One line under the grid — *arrow keys move between free slots* — is
+the cheapest part of the whole thing and the one that makes it real.

@@ -1,0 +1,57 @@
+---
+title: Measuring what a framework actually ships
+description: How the numbers on the stacks page are produced — cold builds, a gzipping static server and the browser's own accounting.
+date: 2026-09-05
+tags: ['performance', 'tooling', 'measurement']
+project: frontend-notes
+---
+
+The [stack comparison](/stacks) puts a number next to each framework. Numbers
+like that are usually quoted from a blog post about a different app, on a
+different machine, in a different year. These were produced by a script in this
+repository, on one laptop, on the same afternoon.
+
+## What is measured
+
+**Cold build time.** Delete every cache the tool keeps — `dist`, `.astro`,
+`.svelte-kit`, `.angular`, `node_modules/.vite` — then time `npm run build`.
+Installing dependencies is not counted; that is a network measurement, not a
+build one.
+
+**JavaScript on first load.** Serve the production build over a local HTTP
+server, open the page in headless Chrome through the DevTools protocol, and sum
+`encodedDataLength` for every response whose MIME type is JavaScript, six
+seconds after navigation, so lazily loaded chunks and the first data round trip
+are included.
+
+<div class="not-prose my-6 rounded-xl border border-line bg-surface p-4 text-sm">
+  <p class="font-medium">Two details that decide whether the number means anything</p>
+  <ul class="mt-2 list-disc space-y-1 pl-5 text-ink-soft">
+    <li>
+      <strong>The server gzips.</strong> Every real host does. Measuring raw bytes
+      roughly doubles every figure and flatters nobody equally.
+    </li>
+    <li>
+      <strong>The browser does the counting.</strong> Adding up files in
+      <code>dist</code> counts chunks nobody downloads and misses the ones that
+      arrive after the first render.
+    </li>
+  </ul>
+</div>
+
+## What the numbers do not say
+
+They compare five different applications, not five builds of one. A dashboard
+with a virtualized ten-thousand-row table is not the same amount of product as a
+week-grid booking form, and neither is a component library build.
+
+Two of them also ship an in-browser mock API, because they have no backend:
+93 kB gzipped in one, 153 kB in the other. That is demo scaffolding, not the
+framework, and it is broken out separately on the stacks page for exactly that
+reason.
+
+What the numbers are good for is the shape of the thing: an island-based content
+site ships no JavaScript at all on a page of prose, a compiled framework ships
+tens of kilobytes, and a framework with a router, a query cache and a table
+library ships hundreds. That ranking is stable across any honest way of
+measuring it, and it is worth knowing before you pick.

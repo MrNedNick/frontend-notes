@@ -1,0 +1,50 @@
+---
+import ThemeToggle from './theme-toggle.astro'
+
+interface Props {
+  section: 'notes' | 'stacks' | 'home'
+}
+const { section } = Astro.props
+
+const links = [
+  { href: '/notes', label: 'Notes', key: 'notes' },
+  { href: '/stacks', label: 'Stacks compared', key: 'stacks' },
+] as const
+---
+
+<header class="sticky top-0 z-30 border-b border-line bg-page/85 backdrop-blur">
+  <div class="mx-auto flex w-full max-w-4xl items-center gap-4 px-5 py-3 sm:px-6">
+    <a href="/" class="group flex items-center gap-2.5">
+      <span
+        aria-hidden="true"
+        class="grid size-9 place-items-center rounded-[10px] bg-accent font-semibold text-on-accent"
+      >
+        FN
+      </span>
+      <span class="leading-tight">
+        <span class="block text-sm font-semibold group-hover:text-accent">Frontend Notes</span>
+        <span class="block text-xs text-ink-soft">What the last five projects taught me</span>
+      </span>
+    </a>
+
+    <nav class="ml-auto flex items-center gap-1" aria-label="Main">
+      {
+        links.map((link) => (
+          <a
+            href={link.href}
+            aria-current={section === link.key ? 'page' : undefined}
+            class:list={[
+              'rounded-full px-3 py-1.5 text-sm transition-colors',
+              section === link.key
+                ? 'bg-accent-soft text-accent'
+                : 'text-ink-soft hover:bg-accent-soft hover:text-accent',
+            ]}
+          >
+            {link.label}
+          </a>
+        ))
+      }
+      <ThemeToggle />
+    </nav>
+  </div>
+</header>

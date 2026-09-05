@@ -1,0 +1,168 @@
+---
+/**
+ * The only island on the site. Pagefind's index is built from the rendered HTML
+ * after `astro build`, and its runtime is imported on the first keystroke — so
+ * a visitor who never searches never downloads a search engine.
+ */
+---
+
+<section class="mt-6" data-search>
+  <label for="site-search" class="text-sm font-medium">Search the notes</label>
+  <input
+    id="site-search"
+    type="search"
+    autocomplete="off"
+    placeholder="service worker, contrast, tabindex…"
+    class="mt-2 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm outline-none placeholder:text-ink-soft/70 focus-visible:border-accent"
+    data-search-input
+  />
+
+  <p class="mt-2 text-xs text-ink-soft" data-search-hint>
+    Full text, including the middle of a note. The index loads on your first keystroke.
+  </p>
+
+  <div class="mt-3 hidden" data-search-loading aria-hidden="true">
+    <div class="h-4 w-2/3 animate-pulse rounded bg-line"></div>
+    <div class="mt-2 h-4 w-1/2 animate-pulse rounded bg-line"></div>
+  </div>
+
+  <p
+    class="mt-3 hidden rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink-soft"
+    data-search-empty
+  >
+    Nothing matched. Try a single word — the index is small.
+  </p>
+
+  <div
+    class="mt-3 hidden rounded-lg border border-accent bg-accent-soft px-3 py-2 text-sm"
+    data-search-error
+    role="alert"
+  >
+    <p data-search-error-text></p>
+    <button
+      type="button"
+      class="mt-2 rounded-full border border-accent px-3 py-1 text-xs text-accent hover:bg-accent hover:text-on-accent"
+      data-search-retry
+    >
+      Try again
+    </button>
+  </div>
+
+  <ul class="mt-3 grid gap-2" data-search-results aria-live="polite"></ul>
+</section>
+
+<script>
+  interface PagefindResult {
+    data(): Promise<{ url: string; excerpt: string; meta: { title?: string } }>
+  }
+  interface Pagefind {
+    search(query: string): Promise<{ results: PagefindResult[] }>
+  }
+
+  const root = document.querySelector<HTMLElement>('[data-search]')
+  if (root) {
+    const input = root.querySelector<HTMLInputElement>('[data-search-input]')!
+    const list = root.querySelector<HTMLUListElement>('[data-search-results]')!
+    const loading = root.querySelector<HTMLElement>('[data-search-loading]')!
+    const empty = root.querySelector<HTMLElement>('[data-search-empty]')!
+    const error = root.querySelector<HTMLElement>('[data-search-error]')!
+    const errorText = root.querySelector<HTMLElement>('[data-search-error-text]')!
+    const hint = root.querySelector<HTMLElement>('[data-search-hint]')!
+    const notes = document.querySelector<HTMLElement>('[data-notes-list]')
+
+    let engine: Pagefind | null = null
+    let loadFailed = false
+    let indexMissing = false
+    let token = 0
+
+    const show = (el: HTMLElement, on: boolean) => el.classList.toggle('hidden', !on)
+
+    /**
+     * Loads Pagefind's runtime, which only exists after the search index is
+     * built over the rendered site — so the bundler must not try to resolve it.
+     *
+     * `new Function` rather than `import()`: even with a runtime path and a
+     * `@vite-ignore` comment, the build rewrites the call into its preload
+     * helper, and in a script that ends up inlined in the HTML the helper's
+     * `__VITE_PRELOAD__` placeholder is never substituted — so the import
+     * throws `__VITE_PRELOAD__ is not defined` instead of loading anything.
+     */
+    const importModule = new Function('path', 'return import(path)') as (
+      path: string,
+    ) => Promise<Pagefind>
+
+    async function engineOrThrow(): Promise<Pagefind> {
+      if (engine) return engine
+      try {
+        engine = await importModule('/pagefind/pagefind.js')
+      } catch (cause) {
+        indexMissing = true
+        throw cause
+      }
+      indexMissing = false
+      return engine
+    }
+
+    async function run(query: string) {
+      const mine = ++token
+      show(error, false)
+
+      if (query.length < 2) {
+        list.innerHTML = ''
+        show(loading, false)
+        show(empty, false)
+        show(hint, true)
+        notes?.classList.remove('hidden')
+        return
+      }
+
+      show(hint, false)
+      show(loading, true)
+      notes?.classList.add('hidden')
+
+      try {
+        const pagefind = await engineOrThrow()
+        const search = await pagefind.search(query)
+        const found = await Promise.all(search.results.slice(0, 8).map((result) => result.data()))
+        if (mine !== token) return // a newer keystroke already won
+
+        show(loading, false)
+        show(empty, found.length === 0)
+        list.innerHTML = found
+          .map(
+            (item) => `
+              <li class="rounded-xl border border-line bg-surface p-4">
+                <a class="font-medium hover:text-accent" href="${item.url}">${item.meta.title ?? item.url}</a>
+                <p class="mt-1 text-sm text-ink-soft [&_mark]:bg-mark [&_mark]:text-ink">${item.excerpt}</p>
+              </li>`,
+          )
+          .join('')
+      } catch (cause) {
+        if (mine !== token) return
+        loadFailed = true
+        engine = null
+        show(loading, false)
+        show(empty, false)
+        list.innerHTML = ''
+        // Two very different failures used to share one message. The index is
+        // only built by `astro build`, so "not on the dev server" is the common
+        // case — but if the index is there and something else broke, say that.
+        errorText.textContent = indexMissing
+          ? 'The search index is not there. It is generated during a production build, so search does not work on the dev server.'
+          : `Search failed: ${cause instanceof Error ? cause.message : String(cause)}`
+        show(error, true)
+      }
+    }
+
+    let timer: number | undefined
+    input.addEventListener('input', () => {
+      window.clearTimeout(timer)
+      timer = window.setTimeout(() => void run(input.value.trim()), 180)
+    })
+
+    root.querySelector('[data-search-retry]')?.addEventListener('click', () => {
+      if (loadFailed) engine = null
+      void run(input.value.trim())
+    })
+  }
+</script>

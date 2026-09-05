@@ -1,0 +1,77 @@
+---
+import type { GetStaticPaths } from 'astro'
+import { render } from 'astro:content'
+import Base from '../../layouts/base.astro'
+import { publishedNotes } from '../../lib/notes'
+import { formatDate, tagSlug } from '../../lib/format'
+
+export const getStaticPaths = (async () => {
+  const notes = await publishedNotes()
+  return notes.map((note) => ({ params: { slug: note.id }, props: { note } }))
+}) satisfies GetStaticPaths
+
+const { note } = Astro.props
+const { Content, headings } = await render(note)
+const sections = headings.filter((heading) => heading.depth === 2)
+---
+
+<Base
+  title={`${note.data.title} — Frontend Notes`}
+  description={note.data.description}
+  ogImage={`/og/${note.id}.png`}
+  section="notes"
+>
+  <p class="text-sm text-ink-soft"><a class="hover:text-accent" href="/notes">← All notes</a></p>
+
+  <article class="mt-4">
+    <header>
+      <h1 class="text-3xl font-semibold leading-tight tracking-tight">{note.data.title}</h1>
+      <p class="mt-3 text-base text-ink-soft">{note.data.description}</p>
+      <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-ink-soft">
+        <time datetime={note.data.date.toISOString()}>{formatDate(note.data.date)}</time>
+        {note.data.project && (
+          <>
+            <span aria-hidden="true">·</span>
+            <span>from <span class="text-ink">{note.data.project}</span></span>
+          </>
+        )}
+        <span aria-hidden="true">·</span>
+        <ul class="flex flex-wrap gap-1.5">
+          {
+            note.data.tags.map((tag) => (
+              <li>
+                <a
+                  href={`/tags/${tagSlug(tag)}`}
+                  class="rounded-full bg-accent-soft px-2.5 py-0.5 text-accent hover:underline"
+                >
+                  {tag}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </header>
+
+    {
+      sections.length > 1 && (
+        <nav class="mt-8 rounded-xl border border-line bg-surface p-4" aria-label="On this page">
+          <p class="text-xs font-medium uppercase tracking-wide text-ink-soft">On this page</p>
+          <ol class="mt-2 grid gap-1 text-sm">
+            {sections.map((heading) => (
+              <li>
+                <a class="text-ink-soft hover:text-accent" href={`#${heading.slug}`}>
+                  {heading.text}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      )
+    }
+
+    <div class="prose mt-8">
+      <Content />
+    </div>
+  </article>
+</Base>

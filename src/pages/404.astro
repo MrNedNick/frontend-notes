@@ -1,0 +1,36 @@
+---
+import Base from '../layouts/base.astro'
+import { publishedNotes } from '../lib/notes'
+
+const notes = (await publishedNotes()).slice(0, 3)
+---
+
+<Base
+  title="Not found — Frontend Notes"
+  description="That page does not exist. Here are the newest notes instead."
+>
+  <div class="py-10 text-center">
+    <p class="text-sm font-medium text-accent">404</p>
+    <h1 class="mt-2 text-2xl font-semibold tracking-tight">That page is not here</h1>
+    <p class="mx-auto mt-3 max-w-md text-sm text-ink-soft">
+      The link may be old, or the note may have been renamed. The newest ones are below.
+    </p>
+    <ul class="mx-auto mt-6 grid max-w-md gap-2 text-left">
+      {
+        notes.map((note) => (
+          <li class="rounded-lg border border-line bg-surface px-4 py-3">
+            <a class="text-sm font-medium hover:text-accent" href={`/notes/${note.id}`}>
+              {note.data.title}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+    <a
+      href="/"
+      class="mt-6 inline-block rounded-full bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:opacity-90"
+    >
+      Back to the start
+    </a>
+  </div>
+</Base>

@@ -1,0 +1,19 @@
+---
+const repo = 'https://github.com/MrNedNick/frontend-notes'
+const year = new Date().getFullYear()
+---
+
+<footer class="border-t border-line bg-surface">
+  <div
+    class="mx-auto flex w-full max-w-4xl flex-wrap items-center gap-x-6 gap-y-2 px-5 py-6 text-xs text-ink-soft sm:px-6"
+  >
+    <p>Written while building the projects they are about. © {year}</p>
+    <nav class="ml-auto flex flex-wrap gap-4" aria-label="Site links">
+      <a class="hover:text-accent" href="/rss.xml">RSS</a>
+      <a class="hover:text-accent" href="/stacks">Stacks compared</a>
+      <a class="hover:text-accent" href={repo} rel="noreferrer noopener" target="_blank">
+        Source on GitHub
+      </a>
+    </nav>
+  </div>
+</footer>

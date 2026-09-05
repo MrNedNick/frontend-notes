@@ -1,0 +1,37 @@
+---
+import type { GetStaticPaths } from 'astro'
+import Base from '../../layouts/base.astro'
+import NoteCard from '../../components/note-card.astro'
+import { notesByTag, tagLabel } from '../../lib/notes'
+
+export const getStaticPaths = (async () => {
+  const grouped = await notesByTag()
+  return [...grouped.entries()].map(([slug, notes]) => ({
+    params: { tag: slug },
+    props: { notes },
+  }))
+}) satisfies GetStaticPaths
+
+const { notes } = Astro.props
+const { tag } = Astro.params
+const label = await tagLabel(tag!)
+---
+
+<Base
+  title={`${label} — Frontend Notes`}
+  description={`Notes tagged ${label}: ${notes.map((note) => note.data.title).join('; ')}`}
+  section="notes"
+>
+  <p class="text-sm text-ink-soft"><a class="hover:text-accent" href="/notes">← All notes</a></p>
+  <h1 class="mt-2 text-2xl font-semibold tracking-tight">
+    Tagged <span class="text-accent">{label}</span>
+  </h1>
+  <p class="mt-2 text-sm text-ink-soft">
+    {notes.length}
+    {notes.length === 1 ? 'note' : 'notes'}.
+  </p>
+
+  <div class="mt-6 grid gap-3">
+    {notes.map((note) => <NoteCard note={note} />)}
+  </div>
+</Base>
