@@ -1,4 +1,5 @@
 ---
+import { sitePath } from '../lib/path'
 import Base from '../layouts/base.astro'
 import NoteCard from '../components/note-card.astro'
 import { publishedNotes } from '../lib/notes'
@@ -31,13 +32,13 @@ const heaviest = measured.reduce((max, stack) => (stack.jsBytes! > max.jsBytes! 
 
     <div class="mt-6 flex flex-wrap gap-3">
       <a
-        href="/stacks"
+        href={sitePath('/stacks')}
         class="rounded-full bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:opacity-90"
       >
         See the comparison
       </a>
       <a
-        href="/notes"
+        href={sitePath('/notes')}
         class="rounded-full border border-line px-4 py-2 text-sm font-medium hover:border-accent hover:text-accent"
       >
         All {notes.length} notes
@@ -66,7 +67,7 @@ const heaviest = measured.reduce((max, stack) => (stack.jsBytes! > max.jsBytes! 
   <section class="mt-12">
     <div class="flex items-baseline justify-between gap-4">
       <h2 class="text-lg font-semibold">Latest notes</h2>
-      <a class="text-sm text-accent hover:underline" href="/notes">All notes →</a>
+      <a class="text-sm text-accent hover:underline" href={sitePath('/notes')}>All notes →</a>
     </div>
     <div class="mt-4 grid gap-3">
       {latest.map((note) => <NoteCard note={note} />)}

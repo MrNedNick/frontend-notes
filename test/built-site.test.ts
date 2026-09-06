@@ -7,6 +7,7 @@ import { beforeAll, describe, expect, it } from 'vitest'
  * page of prose, drafts gone, a preview image per note, a feed that matches the
  * notes. CI builds before it tests for exactly this reason.
  */
+const BASE = process.env.GITHUB_PAGES === 'true' ? '/frontend-notes/' : '/'
 const DIST = join(process.cwd(), 'dist')
 const built = existsSync(join(DIST, 'index.html'))
 
@@ -40,7 +41,8 @@ describe.skipIf(!built)('the built site', () => {
       const html = read(page)
       const image = /<meta property="og:image" content="([^"]+)"/.exec(html)?.[1]
       expect(image, `${page} has no og:image`).toBeTruthy()
-      const file = new URL(image!).pathname.replace(/^\//, '')
+      expect(new URL(image!).pathname).toMatch(new RegExp(`^${BASE}`))
+      const file = new URL(image!).pathname.slice(BASE.length)
       expect(existsSync(join(DIST, file)), `${file} was never generated`).toBe(true)
       expect(html).toContain('<link rel="canonical"')
     }

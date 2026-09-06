@@ -94,7 +94,7 @@
     async function engineOrThrow(): Promise<Pagefind> {
       if (engine) return engine
       try {
-        engine = await importModule('/pagefind/pagefind.js')
+        engine = await importModule(`${import.meta.env.BASE_URL.replace(/\/$/, '')}/pagefind/pagefind.js`)
       } catch (cause) {
         indexMissing = true
         throw cause

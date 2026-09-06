@@ -5,7 +5,9 @@ import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'astro/config'
 
 export default defineConfig({
-  site: 'https://frontend-notes.pages.dev',
+  site: 'https://mrnednick.github.io',
+  base: process.env.GITHUB_PAGES === 'true' ? '/frontend-notes' : '/',
+  trailingSlash: 'always',
   integrations: [mdx(), sitemap()],
   vite: {
     plugins: [tailwindcss()],

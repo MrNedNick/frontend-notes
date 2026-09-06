@@ -1,5 +1,7 @@
 # Frontend Notes
 
+[Live demo](https://mrnednick.github.io/frontend-notes/)
+
 Notes from building five small products on five stacks I had not used before —
 and a comparison page that puts a measured number next to each of them.
 
@@ -126,3 +128,9 @@ best practices, SEO) on both the home page and a note page, with CLS 0.
 - The comparison covers what has been built. One project in the table has no
   numbers because it does not exist yet, and it says so rather than being
   quietly dropped.
+
+## Deployment
+
+GitHub Actions checks, builds, tests, and deploys the site to GitHub Pages.
+Set `GITHUB_PAGES=true` for the `/frontend-notes/` base path; local development stays at `/`.
+Navigation, RSS, preview images, and the search index use the configured base path.

@@ -1,4 +1,5 @@
 ---
+import { sitePath } from '../../lib/path'
 import type { GetStaticPaths } from 'astro'
 import Base from '../../layouts/base.astro'
 import NoteCard from '../../components/note-card.astro'
@@ -22,7 +23,7 @@ const label = await tagLabel(tag!)
   description={`Notes tagged ${label}: ${notes.map((note) => note.data.title).join('; ')}`}
   section="notes"
 >
-  <p class="text-sm text-ink-soft"><a class="hover:text-accent" href="/notes">← All notes</a></p>
+  <p class="text-sm text-ink-soft"><a class="hover:text-accent" href={sitePath('/notes')}>← All notes</a></p>
   <h1 class="mt-2 text-2xl font-semibold tracking-tight">
     Tagged <span class="text-accent">{label}</span>
   </h1>

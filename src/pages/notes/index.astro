@@ -1,4 +1,5 @@
 ---
+import { sitePath } from '../../lib/path'
 import Base from '../../layouts/base.astro'
 import NoteCard from '../../components/note-card.astro'
 import Search from '../../components/search.astro'
@@ -29,7 +30,7 @@ const labelFor = (slug: string) =>
       tags.map(([slug, tagged]) => (
         <li>
           <a
-            href={`/tags/${slug}`}
+            href={sitePath(`/tags/${slug}`)}
             class="rounded-full border border-line px-3 py-1 text-xs text-ink-soft hover:border-accent hover:text-accent"
           >
             {labelFor(slug)} <span class="text-ink-soft/70">{tagged.length}</span>

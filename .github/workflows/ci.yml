@@ -1,32 +1,46 @@
-name: CI
-
+name: Verify and deploy
 on:
   push:
     branches: [main]
   pull_request:
-
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
-  check:
-    name: Lint, build, test
+  verify:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-
       - run: npm ci
-
-      - name: Lint
-        run: npm run lint
-
-      # Build before test on purpose: part of the suite asserts on the built
-      # site — no JavaScript on a note page, drafts gone, a feed that matches.
-      - name: Build
-        run: npm run build
-
-      - name: Test
-        run: npm test
+      - run: npm run lint
+      - run: npm run build
+        env:
+          GITHUB_PAGES: 'true'
+      - run: npm test
+        env:
+          GITHUB_PAGES: 'true'
+      - uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        with:
+          path: dist
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: verify
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/configure-pages@v5
+      - uses: actions/deploy-pages@v4
+        id: deployment

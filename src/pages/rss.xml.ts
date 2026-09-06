@@ -1,3 +1,4 @@
+import { sitePath } from '../lib/path'
 import rss from '@astrojs/rss'
 import type { APIContext } from 'astro'
 import { publishedNotes } from '../lib/notes'
@@ -9,12 +10,12 @@ export async function GET(context: APIContext) {
     title: 'Frontend Notes',
     description:
       'Short notes from building five small products on five stacks, with numbers from real builds.',
-    site: context.site ?? 'https://frontend-notes.pages.dev',
+    site: context.site ?? 'https://mrnednick.github.io',
     items: notes.map((note) => ({
       title: note.data.title,
       description: note.data.description,
       pubDate: note.data.date,
-      link: `/notes/${note.id}/`,
+      link: sitePath(`/notes/${note.id}/`),
       categories: note.data.tags,
     })),
     customData: '<language>en</language>',
