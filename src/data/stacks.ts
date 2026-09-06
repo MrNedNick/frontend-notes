@@ -10,7 +10,7 @@ export interface Stack {
   readonly stack: string
   readonly what: string
   readonly repo: string
-  /** Live demo, when there is one — every repository here is still private. */
+  /** Live demo, when available. Measurements retain their original date. */
   readonly demo: string | null
   readonly buildSeconds: number | null
   /** JavaScript downloaded on first load of the main page, gzipped. */
@@ -33,7 +33,7 @@ export const STACKS: readonly Stack[] = [
     stack: 'Astro 7',
     what: 'This site: notes, tags, search, RSS.',
     repo: 'https://github.com/MrNedNick/frontend-notes',
-    demo: null,
+    demo: 'https://mrnednick.github.io/frontend-notes/',
     buildSeconds: 2.8,
     jsBytes: 0,
     jsRequests: 0,
@@ -49,7 +49,7 @@ export const STACKS: readonly Stack[] = [
     stack: 'SvelteKit 2 + Svelte 5',
     what: 'Hacker News reader: three feeds, comment trees, offline reading, search.',
     repo: 'https://github.com/MrNedNick/daily-brief',
-    demo: null,
+    demo: 'https://mrnednick.github.io/daily-brief/',
     buildSeconds: 2.2,
     jsBytes: 44985,
     jsRequests: 14,
@@ -63,7 +63,7 @@ export const STACKS: readonly Stack[] = [
     stack: 'Angular 20',
     what: 'Meeting-room booking: week grid, typed reactive forms, roles behind a guard.',
     repo: 'https://github.com/MrNedNick/booking-desk',
-    demo: null,
+    demo: 'https://mrnednick.github.io/booking-desk/',
     buildSeconds: 4.6,
     jsBytes: 280113,
     jsRequests: 10,
@@ -78,7 +78,7 @@ export const STACKS: readonly Stack[] = [
     stack: 'React 19 + TanStack',
     what: 'Analytics dashboard: 10,000-row virtualized table, filters in the URL, linked charts.',
     repo: 'https://github.com/MrNedNick/metrics-board',
-    demo: null,
+    demo: 'https://mrnednick.github.io/metrics-board/',
     buildSeconds: 2.8,
     jsBytes: 421831,
     jsRequests: 2,
@@ -106,13 +106,13 @@ export const STACKS: readonly Stack[] = [
   {
     name: 'split-bill',
     stack: 'Expo + React Native',
-    what: 'Shared expenses on a trip — the one project in this comparison that does not exist yet.',
+    what: 'Shared expenses on a trip — not yet built when these measurements were taken.',
     repo: 'https://github.com/MrNedNick/split-bill',
     demo: null,
     buildSeconds: null,
     jsBytes: null,
     jsRequests: null,
-    worked: 'Nothing to report: not started.',
+    worked: 'No measurements in this snapshot: not started on 2026-09-05.',
     friction:
       'Listed here so the gap is visible rather than quietly omitted. Numbers will be added when there is a build to measure.',
   },

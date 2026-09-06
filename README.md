@@ -116,7 +116,7 @@ is regenerated on every build.
 npx netlify deploy --prod
 ```
 
-There is no public link yet — the repository is private. Lighthouse on the local
+The public site is hosted on GitHub Pages. Lighthouse on the local
 production build reports **100 / 100 / 100 / 100** (performance, accessibility,
 best practices, SEO) on both the home page and a note page, with CLS 0.
 
