@@ -106,14 +106,17 @@ export const STACKS: readonly Stack[] = [
   {
     name: 'split-bill',
     stack: 'Expo + React Native',
-    what: 'Shared expenses on a trip — not yet built when these measurements were taken.',
+    what: 'Split a restaurant bill across a group, on iOS and the web.',
     repo: 'https://github.com/MrNedNick/split-bill',
     demo: null,
-    buildSeconds: null,
-    jsBytes: null,
-    jsRequests: null,
-    worked: 'No measurements in this snapshot: not started on 2026-09-05.',
+    buildSeconds: 11.9,
+    jsBytes: 307924,
+    jsRequests: 1,
+    worked:
+      'The same code exports to a single-page web bundle with no extra step: one JS request carries the whole app, and a reload on a deep link like /bill/[id] still resolves because the export target is a SPA rather than one static page per route.',
     friction:
-      'Listed here so the gap is visible rather than quietly omitted. Numbers will be added when there is a build to measure.',
+      'The only stack here shipped as one bundle instead of route-based chunks, so the whole app pays for every screen on first load — there is no lazy boundary to split it at without leaving the Expo Router defaults.',
+    caveat:
+      'Measured 2026-09-06, a day after the rest of this table: the app did not exist yet on 2026-09-05.',
   },
 ]
