@@ -2,18 +2,22 @@
 
 [Live demo](https://mrnednick.github.io/frontend-notes/)
 
-Notes from building five small products on five stacks I had not used before —
-and a comparison page that puts a measured number next to each of them.
+Frontend bugs from my own projects, filed under what they looked like — a blank
+screen, a header hanging in the wrong place, a layout shift on a page that does
+not move — each with the cause, the fix and a live demo where the bug is gone.
 
-![The stack comparison: cold build time and JavaScript on first load for each project](docs/stacks.png)
+![The home page: an index of symptoms with their category, cause and project](docs/index.png)
 
 ## What it is
 
-- **Seven notes**, each one from a specific bug in a specific project: a service
-  worker URL that broke every shared link, sticky headers that slide the wrong
-  way inside a horizontal scroller, a lazy landing route that cost 0.37 of
-  Cumulative Layout Shift, a grid with 120 tab stops, and a contrast failure
-  that every button in a design system inherited.
+- **Eight bugs, indexed by symptom.** The home page is a list of what people
+  saw — *"The app shows a blank page for about a minute"*, *"Clicking ? makes
+  the explanation blink in the corner"* — with the category, the cause in one
+  line and the project. A plain page per category filters them without
+  JavaScript.
+- **Each note in the same order:** symptom → how to reproduce → what it was not
+  → cause → the fix as one diff → how not to repeat it, with links to the fix in
+  the project's history and to a live page where the bug is gone.
 - **A stack comparison** with cold build times and the JavaScript each project
   actually hands the browser — measured on one laptop, on one afternoon, all the
   same way.
@@ -26,11 +30,11 @@ Zero, on every page, as counted by the browser:
 
 | Page | JS requests | JS bytes |
 |---|---|---|
-| Home, a note, a tag page, the comparison | 0 | 0 |
+| Home, a category page, a note, a tag page, the comparison | 0 | 0 |
 | The notes index, after you type in the search box | 1 | 46 kB (Pagefind) |
 
-The two scripts on a page are inlined in the HTML and add up to a few hundred
-bytes: one sets the theme class before the first paint, one handles the toggle.
+The two scripts on a page are inlined in the HTML and add up to about a
+kilobyte: one sets the theme class before the first paint, one handles the toggle.
 Nothing else is shipped, because nothing else needs to run — the pages are
 rendered at build time and the only interactive thing on the site is the search
 box, whose engine is fetched on the first keystroke and never before.
@@ -54,13 +58,13 @@ draw anything.
 ## What is worth looking at
 
 - **The schema is the contract.** `src/content/schema.ts` is a plain Zod object
-  imported by both the collection config and the tests, so a note missing a
-  description fails the build with the file name and the field, rather than
-  disappearing quietly from a list.
+  imported by both the collection config and the tests, so a bug note without a
+  symptom, a category, a demo or a link to its fix fails the build with the file
+  name and the field, rather than disappearing quietly from a list. Tests also
+  check that every bug note is written in the six sections, in order.
 - **Drafts live in the open.** A note with `draft: true` renders on the dev
   server and never reaches a production build — no branch, no folder of things
-  someone forgot about. A test asserts it stays out of the built site and the
-  feed.
+  someone forgot about.
 - **Search is the only island, and it is lazy.** The runtime is imported on the
   first keystroke. It also has to be loaded past the bundler: even with a
   runtime path and a `@vite-ignore` comment, the build rewrote the dynamic
@@ -71,6 +75,13 @@ draw anything.
   describes the method: delete every cache, time the build, serve the output
   over a gzipping local server, and let headless Chrome count what it
   downloaded.
+
+## Adding a note
+
+Copy [`docs/note-template.md`](docs/note-template.md) into `src/content/notes/`,
+fill in the front matter — the symptom in the words someone would search for,
+the category, a one-line cause, the project, a live demo and the fix — and write
+the six sections. `npm run build` tells you what is missing.
 
 ## Running it
 
