@@ -3,15 +3,25 @@ title: A hundred and twenty tab stops is not keyboard accessible
 description: Every free slot in a week grid was a button, and every button was in the tab order. The fix is the pattern grids have used since before I was writing them.
 date: 2026-09-01
 tags: ['accessibility', 'keyboard', 'patterns']
+kind: symptom
+symptom: Tabbing to the footer takes 130 presses — through every free slot in the week
+category: accessibility
+cause: every free half-hour is a button in the tab order, instead of one tab stop for the whole grid
 project: booking-desk
+demo: https://mrnednick.github.io/booking-desk/
+commit: https://github.com/MrNedNick/booking-desk/blob/f1fb952/src/app/features/schedule/schedule-page.html#L165
 ---
+
+## Symptom
 
 The booking grid renders a button for every free half-hour: five days, twelve
 hours, thirty-minute slots. That is up to 120 buttons, and a keyboard user
 tabbing towards the footer had to pass through all of them.
 
-Every audit was green. Focus was visible, labels were correct, the contrast was
-fine. Nothing catches this except counting:
+## How to reproduce
+
+Every audit was green — focus visible, labels correct, contrast fine. Nothing
+catches this except counting:
 
 ```js
 [...document.querySelectorAll('a[href],button:not([disabled]),input,[tabindex]')]
@@ -19,12 +29,21 @@ fine. Nothing catches this except counting:
 // 130
 ```
 
-## Roving tabindex
+## What it was not
 
-The pattern for a grid of equivalent controls is that the *grid* is one tab
-stop, and the arrow keys move between the things inside it. Exactly one child
-carries `tabindex="0"`; the rest carry `-1` and are reachable only by the arrow
-keys — which is also how a native `<select>`, a radio group and a menu behave.
+Not a missing skip link, and not something an audit tool reports: every single
+button was correct on its own. The problem is only visible in the sum.
+
+## Cause
+
+A grid of equivalent controls was built as a list of independent buttons, so
+each one took its own place in the tab order.
+
+## Fix
+
+Roving tabindex: the *grid* is one tab stop, and the arrow keys move between the
+things inside it. Exactly one cell carries `tabindex="0"`; the rest carry `-1` —
+which is how a native `<select>`, a radio group and a menu behave.
 
 <div class="not-prose my-6 rounded-xl border border-line bg-surface p-4 text-sm">
   <p class="font-medium">The whole mechanism</p>
@@ -36,36 +55,24 @@ keys — which is also how a native `<select>`, a radio group and a menu behave.
   </ol>
 </div>
 
-In an Angular template that is two bindings and a handler:
-
-```html
-<button
-  type="button"
-  [tabIndex]="isActiveSlot(column.date, slot.start) ? 0 : -1"
-  (keydown)="onSlotKeydown($event, column.date, slot.start)"
-  (click)="book(column.date, slot.start)"
-></button>
+```diff
+ <button
+   type="button"
++  [tabIndex]="isActiveSlot(column.date, slot.start) ? 0 : -1"
++  (keydown)="onSlotKeydown($event, column.date, slot.start)"
+   (click)="book(column.date, slot.start)"
+ ></button>
 ```
 
-Up and down move within a day, left and right move between days at the same
-time of day, Home and End jump to the ends of a column. The tab-stop count on
-the page went from 130 to 16.
+Up and down move within a day, left and right between days at the same time,
+Home and End jump to the ends of a column. Focus moves *after* the attribute is
+updated — in a signals-based framework, after change detection has run, so the
+focus call goes in a microtask. The tab-stop count on the page went from 130 to
+16.
 
-## The part everyone forgets
+## How not to repeat it
 
-Focus has to move *after* the attribute is updated, which in a signals-based
-framework means after change detection has run:
-
-```ts
-private focusSlot(key: string): void {
-  // The tabindex has to be on the element before it can take focus.
-  queueMicrotask(() => {
-    const button = this.slotButtons().find((ref) => ref.nativeElement.dataset['slot'] === key)
-    button?.nativeElement.focus()
-  })
-}
-```
-
-And the affordance has to be discoverable: an interaction nobody can see is not
-a feature. One line under the grid — *arrow keys move between free slots* — is
-the cheapest part of the whole thing and the one that makes it real.
+Count tab stops on any page with a repeated control — the one-liner above is
+enough. And make the arrow keys discoverable: one line under the grid, *arrow
+keys move between free slots*, is the cheapest part of the whole thing and the
+one that makes it real.

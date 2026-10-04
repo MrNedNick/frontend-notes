@@ -32,3 +32,12 @@ export async function tagLabel(slug: string): Promise<string> {
   }
   return slug
 }
+
+export type SymptomNote = Note & { data: Extract<Note['data'], { kind: 'symptom' }> }
+
+export const isSymptom = (note: Note): note is SymptomNote => note.data.kind === 'symptom'
+
+/** Bug notes only, newest first — what the symptom index lists. */
+export async function symptomNotes(): Promise<SymptomNote[]> {
+  return (await publishedNotes()).filter(isSymptom)
+}

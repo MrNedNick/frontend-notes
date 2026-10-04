@@ -3,7 +3,8 @@ import { sitePath } from '../../lib/path'
 import type { GetStaticPaths } from 'astro'
 import { render } from 'astro:content'
 import Base from '../../layouts/base.astro'
-import { publishedNotes } from '../../lib/notes'
+import { isSymptom, publishedNotes } from '../../lib/notes'
+import { CATEGORIES } from '../../content/schema'
 import { formatDate, tagSlug } from '../../lib/format'
 
 export const getStaticPaths = (async () => {
@@ -14,6 +15,7 @@ export const getStaticPaths = (async () => {
 const { note } = Astro.props
 const { Content, headings } = await render(note)
 const sections = headings.filter((heading) => heading.depth === 2)
+const bug = isSymptom(note) ? note.data : null
 ---
 
 <Base
@@ -30,6 +32,12 @@ const sections = headings.filter((heading) => heading.depth === 2)
       <p class="mt-3 text-base text-ink-soft">{note.data.description}</p>
       <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-ink-soft">
         <time datetime={note.data.date.toISOString()}>{formatDate(note.data.date)}</time>
+        {bug && (
+          <>
+            <span aria-hidden="true">·</span>
+            <a class="text-accent hover:underline" href={sitePath(`/categories/${bug.category}`)}>{CATEGORIES[bug.category]}</a>
+          </>
+        )}
         {note.data.project && (
           <>
             <span aria-hidden="true">·</span>
@@ -52,6 +60,27 @@ const sections = headings.filter((heading) => heading.depth === 2)
           }
         </ul>
       </div>
+      {
+        bug && (
+          <dl class="mt-6 grid gap-3 rounded-xl border border-line bg-surface p-4 text-sm sm:grid-cols-[8rem_1fr]">
+            <dt class="font-medium text-ink-soft">Symptom</dt>
+            <dd class="text-ink">“{bug.symptom}”</dd>
+            <dt class="font-medium text-ink-soft">Cause</dt>
+            <dd class="text-ink">{bug.cause}</dd>
+            {bug.timeToFind && (
+              <>
+                <dt class="font-medium text-ink-soft">Time to find</dt>
+                <dd class="text-ink">{bug.timeToFind}</dd>
+              </>
+            )}
+            <dt class="font-medium text-ink-soft">See it fixed</dt>
+            <dd class="flex flex-wrap gap-x-4 gap-y-1">
+              <a class="text-accent hover:underline" href={bug.demo}>Live {bug.project}</a>
+              <a class="text-accent hover:underline" href={bug.commit}>The fix in its history</a>
+            </dd>
+          </dl>
+        )
+      }
     </header>
 
     {

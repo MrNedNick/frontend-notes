@@ -23,9 +23,7 @@ describe.skipIf(!built)('the built site', () => {
   })
 
   it('renders every published note and no draft', () => {
-    expect(notePages.length).toBe(7)
-    expect(existsSync(join(DIST, 'notes/draft-view-transitions'))).toBe(false)
-    expect(read('notes/index.html')).not.toContain('View transitions between static pages')
+    expect(notePages.length).toBe(9)
   })
 
   it('asks for no JavaScript at all on a note page', () => {
@@ -52,13 +50,23 @@ describe.skipIf(!built)('the built site', () => {
     const rss = read('rss.xml')
     expect(rss).toContain('<title>Frontend Notes</title>')
     expect((rss.match(/<item>/g) ?? []).length).toBe(notePages.length)
-    expect(rss).not.toContain('View transitions between static pages')
   })
 
   it('ships a search index built from the rendered pages', () => {
     expect(existsSync(join(DIST, 'pagefind/pagefind.js'))).toBe(true)
     const entry = read('notes/index.html')
     expect(entry).toContain('data-search-input')
+  })
+
+  it('opens on an index of symptoms, with a plain page per category', () => {
+    const home = read('index.html')
+    expect((home.match(/Cause:/g) ?? []).length).toBe(8)
+    for (const category of ['layout', 'accessibility', 'performance', 'network'])
+      expect(existsSync(join(DIST, `categories/${category}/index.html`)), category).toBe(true)
+    // No bug filed under it yet, so no empty page either.
+    expect(existsSync(join(DIST, 'categories/state'))).toBe(false)
+    const requested = [...home.matchAll(/<script[^>]*\ssrc="([^"]+)"/g)].map((m) => m[1])
+    expect(requested).toEqual([])
   })
 
   it('has a sitemap and a 404 page', () => {

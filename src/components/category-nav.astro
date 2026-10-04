@@ -1,0 +1,44 @@
+---
+import { sitePath } from '../lib/path'
+import { CATEGORIES, type Category } from '../content/schema'
+import { symptomNotes } from '../lib/notes'
+
+interface Props {
+  current?: Category
+}
+const { current } = Astro.props
+const notes = await symptomNotes()
+const counts = (Object.keys(CATEGORIES) as Category[]).map((category) => ({
+  category,
+  count: notes.filter((note) => note.data.category === category).length,
+}))
+---
+
+<nav class="mt-6" aria-label="Categories">
+  <ul class="flex flex-wrap gap-2">
+    {
+      counts.map(({ category, count }) =>
+        count === 0 ? (
+          <li class="rounded-full border border-dashed border-line px-3 py-1 text-xs text-ink-soft">
+            {CATEGORIES[category]} <span class="sr-only">— no notes yet</span>
+          </li>
+        ) : (
+          <li>
+            <a
+              href={sitePath(`/categories/${category}`)}
+              aria-current={current === category ? 'page' : undefined}
+              class:list={[
+                'inline-block rounded-full border px-3 py-1 text-xs transition-colors',
+                current === category
+                  ? 'border-accent bg-accent-soft text-accent'
+                  : 'border-line text-ink-soft hover:border-accent hover:text-accent',
+              ]}
+            >
+              {CATEGORIES[category]} <span class="opacity-70">{count}</span>
+            </a>
+          </li>
+        ),
+      )
+    }
+  </ul>
+</nav>

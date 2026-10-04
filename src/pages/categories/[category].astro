@@ -1,0 +1,35 @@
+---
+import type { GetStaticPaths } from 'astro'
+import { sitePath } from '../../lib/path'
+import Base from '../../layouts/base.astro'
+import SymptomCard from '../../components/symptom-card.astro'
+import CategoryNav from '../../components/category-nav.astro'
+import { CATEGORIES, type Category } from '../../content/schema'
+import { symptomNotes } from '../../lib/notes'
+
+/** One plain page per category: filtering without a line of JavaScript. */
+export const getStaticPaths = (async () => {
+  const notes = await symptomNotes()
+  return (Object.keys(CATEGORIES) as Category[])
+    .map((category) => ({ category, notes: notes.filter((note) => note.data.category === category) }))
+    .filter(({ notes }) => notes.length > 0)
+    .map(({ category, notes }) => ({ params: { category }, props: { category, notes } }))
+}) satisfies GetStaticPaths
+
+const { category, notes } = Astro.props
+const label = CATEGORIES[category]
+---
+
+<Base
+  title={`${label} bugs — Frontend Notes`}
+  description={`${label} bugs from real projects, by what they looked like: ${notes.map((note) => note.data.symptom).join('; ')}`}
+  section="home"
+>
+  <p class="text-sm text-ink-soft"><a class="hover:text-accent" href={sitePath('/')}>← Every symptom</a></p>
+  <h1 class="mt-4 text-2xl font-semibold tracking-tight">{label}</h1>
+  <p class="mt-2 text-sm text-ink-soft">{notes.length} {notes.length === 1 ? 'bug' : 'bugs'}, by what they looked like.</p>
+  <CategoryNav current={category} />
+  <div class="mt-6 grid gap-3">
+    {notes.map((note) => <SymptomCard note={note} />)}
+  </div>
+</Base>
